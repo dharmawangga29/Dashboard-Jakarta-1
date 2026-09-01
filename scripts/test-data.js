@@ -1,0 +1,16 @@
+process.env.USE_LOCAL_SAMPLE='true';
+const {getExcelBuffer}=await import('../lib/google-drive.js');
+const {readWorkbook}=await import('../lib/excel-reader.js');
+const {parseDashboard}=await import('../lib/parser.js');
+const src=await getExcelBuffer();
+const data=parseDashboard(readWorkbook(src.buffer));
+console.log('Stores:',data.targets.length);
+console.log('Transactions:',data.transactions.length);
+console.log('Stock rows:',data.stocks.length);
+console.log('Dates:',data.filters.dates[0],'->',data.filters.dates.at(-1));
+console.log('Warnings:',data.warnings);
+console.table(data.storeSummary.map(x=>({code:x.code,store:x.store,amount:x.amount,target:x.target,achievement:(x.achievement*100).toFixed(2)+'%'})));
+if (data.targets.length!==9) throw new Error('Expected 9 stores');
+if (!data.transactions.length) throw new Error('SPW transactions empty');
+if (!data.stocks.length) throw new Error('SOH stocks empty');
+console.log('DATA TEST PASSED');

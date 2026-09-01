@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SPW & SOH Dashboard</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div><h1>SPW & SOH Dashboard</h1><p id="status">Memuat data…</p></div>
+    <button id="refreshBtn">Refresh Data</button>
+  </header>
+  <nav class="tabs">
+    <button class="tab active" data-tab="sales">Penjualan</button>
+    <button class="tab" data-tab="stock">Stock</button>
+  </nav>
+  <main>
+    <section id="warnings" class="warnings hidden"></section>
+    <section id="salesTab">
+      <div class="panel">
+        <h2>Filter Penjualan</h2>
+        <div class="filters">
+          <label>Store<select id="storeFilter"></select></label>
+          <label>Staff<select id="staffFilter"></select></label>
+          <label>LOB<select id="lobFilter"></select></label>
+          <label>Tipe<select id="typeFilter"></select></label>
+        </div>
+      </div>
+      <div id="kpis" class="kpis"></div>
+      <div class="panel"><h2>Achievement Semua Store</h2><div class="table-wrap"><table id="storeTable"></table></div></div>
+      <div class="panel"><h2>Penjualan Staff</h2><div class="table-wrap"><table id="staffTable"></table></div></div>
+      <div class="panel"><h2>Penjualan Harian per Staff</h2><p class="muted">Tanggal ditampilkan ke samping. Pilih store untuk analisis harian yang lebih fokus.</p><div class="table-wrap wide"><table id="dailyTable"></table></div></div>
+      <div class="panel"><h2>Detail Transaksi</h2><div class="table-wrap"><table id="detailTable"></table></div></div>
+    </section>
+    <section id="stockTab" class="hidden">
+      <div class="panel"><h2>Filter Stock</h2><div class="filters"><label>Store<select id="stockStoreFilter"></select></label><label>LOB<select id="stockLobFilter"></select></label></div></div>
+      <div class="panel"><h2>Stock On Hand</h2><div class="table-wrap"><table id="stockTable"></table></div></div>
+    </section>
+  </main>
+<script src="/app.js"></script>
+</body>
+</html>
