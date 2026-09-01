@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SPW & SOH Dashboard</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">JAKARTA 1–2 · LIVE EXCEL DASHBOARD</p>
+      <h1>SPW & SOH Dashboard</h1>
+      <p id="sourceStatus" class="muted">Memuat data…</p>
+    </div>
+    <button id="refreshBtn" class="btn">↻ Refresh Data</button>
+  </header>
+
+  <main class="shell">
+    <nav class="tabs" aria-label="Dashboard tabs">
+      <button class="tab active" data-tab="sales">Penjualan</button>
+      <button class="tab" data-tab="stock">Stock</button>
+    </nav>
+
+    <section id="salesTab" class="tab-panel active">
+      <div class="section-head">
+        <div><p class="eyebrow">PERFORMANCE OVERVIEW</p><h2>Penjualan Semua Toko</h2></div>
+        <div class="filters compact"><label>Store<select id="salesStore"><option value="">Semua toko</option></select></label></div>
+      </div>
+      <div id="summaryCards" class="cards"></div>
+      <div class="panel table-panel"><div class="table-wrap"><table id="storeSummaryTable"></table></div></div>
+
+      <section id="storeDetail" class="hidden">
+        <div class="section-head detail-head">
+          <div><p class="eyebrow">STORE DETAIL</p><h2 id="storeTitle">-</h2><p id="storeMeta" class="muted"></p></div>
+        </div>
+        <div id="storeCards" class="cards"></div>
+
+        <div class="panel filters">
+          <label>Nama Staff<select id="staffFilter"><option value="">Semua staff</option></select></label>
+          <label>LOB<select id="lobFilter"><option value="">Semua LOB</option><option>iPhone</option><option>iPad</option><option>Apple Watch</option><option>Mac</option></select></label>
+          <label>Tipe Produk<select id="typeFilter" disabled><option value="">Semua tipe</option></select></label>
+          <button id="resetFilters" class="btn ghost">Reset Filter</button>
+        </div>
+
+        <div class="section-head minor"><div><p class="eyebrow">STAFF PERFORMANCE</p><h3>Penjualan Staff</h3></div></div>
+        <div class="panel table-panel"><div class="table-wrap"><table id="staffTable"></table></div></div>
+
+        <div class="section-head minor"><div><p class="eyebrow">DAILY MATRIX</p><h3>Penjualan Harian per Staff</h3><p class="muted">Tanggal ditampilkan ke samping. Setiap staff memiliki 10 baris metrik.</p></div></div>
+        <div class="panel table-panel"><div class="table-wrap daily"><table id="dailyTable"></table></div></div>
+
+        <div class="section-head minor"><div><p class="eyebrow">TRANSACTION DETAIL</p><h3>Detail Penjualan</h3></div></div>
+        <div class="panel table-panel"><div class="table-wrap"><table id="transactionTable"></table></div></div>
+      </section>
+    </section>
+
+    <section id="stockTab" class="tab-panel">
+      <div class="section-head">
+        <div><p class="eyebrow">STOCK ON HAND</p><h2>Stock per Store</h2></div>
+      </div>
+      <div class="panel filters">
+        <label>Kode / Nama Toko<select id="stockStore"><option value="">Pilih toko</option></select></label>
+        <label>LOB<select id="stockLob"><option value="">Semua LOB</option><option>iPhone</option><option>iPad</option><option>Apple Watch</option><option>Mac</option><option>Accy</option><option>Telkomsel</option><option>XL</option><option>Indosat</option><option>Qoala</option></select></label>
+      </div>
+      <div id="stockCards" class="cards"></div>
+      <div class="panel table-panel"><div class="table-wrap"><table id="stockTable"></table></div></div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
