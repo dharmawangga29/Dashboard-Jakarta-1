@@ -1,134 +1,70 @@
-name: Sync Excel to Google Drive
+name: Auto Update Promo from Google Drive
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "data/*.xlsx"
-      - "data/*.xls"
-      - "data/*.xlsm"
-
+  schedule:
+    - cron: "*/5 * * * *"
   workflow_dispatch:
 
-  schedule:
-    # Backup check setiap 15 menit
-    - cron: "*/15 * * * *"
+concurrency:
+  group: promo-google-drive-sync
+  cancel-in-progress: false
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  sync:
-    name: Upload Excel to Google Drive
+  sync-and-build:
+    name: sync-and-build
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout production branch
         uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
 
-      - name: Setup Python
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Install Google Drive dependency
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install google-api-python-client google-auth google-auth-httplib2 google-auth-oauthlib
-
-      - name: Find Excel file
-        id: excel
-        shell: bash
-        run: |
-          FILE=$(find data -maxdepth 1 -type f \( \
-            -iname "*.xlsx" \
-            -o -iname "*.xls" \
-            -o -iname "*.xlsm" \
-          \) | head -n 1)
-
-          if [ -z "$FILE" ]; then
-            echo "ERROR: Excel file tidak ditemukan di folder data/"
-            exit 1
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
           fi
 
-          echo "Excel ditemukan: $FILE"
-          echo "file=$FILE" >> "$GITHUB_OUTPUT"
-
-      - name: Sync Excel to Google Drive
+      - name: Download latest Excel from Google Drive
         env:
-          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          GOOGLE_SERVICE_ACCOUNT_JSON_BASE64: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON_BASE64 }}
           GOOGLE_DRIVE_FILE_ID: ${{ secrets.GOOGLE_DRIVE_FILE_ID }}
-          EXCEL_FILE: ${{ steps.excel.outputs.file }}
         run: |
-          python <<'PY'
-          import os
-          import json
-          import mimetypes
+          python scripts/sync_google_drive.py
 
-          from google.oauth2 import service_account
-          from googleapiclient.discovery import build
-          from googleapiclient.http import MediaFileUpload
-
-          credentials_json = os.environ["GOOGLE_SERVICE_ACCOUNT_JSON"]
-          file_id = os.environ["GOOGLE_DRIVE_FILE_ID"]
-          excel_file = os.environ["EXCEL_FILE"]
-
-          credentials_info = json.loads(credentials_json)
-
-          credentials = service_account.Credentials.from_service_account_info(
-              credentials_info,
-              scopes=[
-                  "https://www.googleapis.com/auth/drive"
-              ]
-          )
-
-          drive = build(
-              "drive",
-              "v3",
-              credentials=credentials
-          )
-
-          mime_type = (
-              mimetypes.guess_type(excel_file)[0]
-              or "application/octet-stream"
-          )
-
-          print("Checking Google Drive file...")
-
-          existing = drive.files().get(
-              fileId=file_id,
-              fields="id,name,mimeType,modifiedTime"
-          ).execute()
-
-          print(f"Google Drive file : {existing.get('name')}")
-          print(f"Google Drive ID   : {existing.get('id')}")
-          print(f"Current modified  : {existing.get('modifiedTime')}")
-
-          media = MediaFileUpload(
-              excel_file,
-              mimetype=mime_type,
-              resumable=True
-          )
-
-          print("Uploading Excel...")
-
-          updated = drive.files().update(
-              fileId=file_id,
-              media_body=media,
-              fields="id,name,size,modifiedTime"
-          ).execute()
-
-          print("====================================")
-          print("SYNC BERHASIL")
-          print("====================================")
-          print(f"File       : {updated.get('name')}")
-          print(f"ID         : {updated.get('id')}")
-          print(f"Size       : {updated.get('size')}")
-          print(f"Modified   : {updated.get('modifiedTime')}")
-          print("====================================")
-          PY
-
-      - name: Sync completed
+      - name: Build public data
         run: |
-          echo "Excel berhasil disinkronkan ke Google Drive."
+          python build_static.py
+
+      - name: Commit only generated website data
+        run: |
+          git config user.name "Promo Calculator Bot"
+          git config user.email "promo-calculator-bot@users.noreply.github.com"
+
+          git add public/
+
+          if git diff --cached --quiet; then
+            echo "No generated website data changes."
+            exit 0
+          fi
+
+          echo "Generated website data changed."
+
+          git commit -m "chore: auto-update promo data from Google Drive"
+
+          git fetch origin main
+          git rebase origin/main
+
+          git push origin HEAD:main
